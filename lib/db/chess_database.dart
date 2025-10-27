@@ -21,20 +21,16 @@ class ChessDatabase {
 
     return await openDatabase(
       path,
-      version: 2, // เปลี่ยนเป็น 2 เพื่อให้ onUpgrade ทำงาน
+      version: 2, // version 2 เพราะเราเพิ่ม column ใหม่
       onCreate: _createDB,
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
-          await db.execute('''
-            CREATE TABLE IF NOT EXISTS $_tableName (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              name TEXT,
-              type TEXT,
-              color TEXT,
-              value REAL
-            )
-          ''');
-          print('Table $_tableName created via onUpgrade');
+          // เพิ่ม column ใหม่โดยไม่ลบข้อมูลเก่า
+          await db.execute(
+              "ALTER TABLE $_tableName ADD COLUMN material TEXT DEFAULT 'Unknown'");
+          await db.execute(
+              "ALTER TABLE $_tableName ADD COLUMN year INTEGER DEFAULT 2023");
+          print('Table $_tableName upgraded with material and year');
         }
       },
     );
@@ -47,15 +43,20 @@ class ChessDatabase {
         name TEXT,
         type TEXT,
         color TEXT,
-        value REAL
+        value REAL,
+        material TEXT DEFAULT 'Unknown',
+        year INTEGER DEFAULT 2023
       )
     ''');
   }
 
   Future<int> insertPiece(ChessPiece piece) async {
     final db = await instance.database;
-    return await db.insert(_tableName, piece.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    return await db.insert(
+      _tableName,
+      piece.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<List<ChessPiece>> getPieces() async {

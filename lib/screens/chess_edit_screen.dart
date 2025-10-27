@@ -19,19 +19,31 @@ class _ChessEditScreenState extends State<ChessEditScreen> {
   String? _color;
   double? _value;
   int? _id;
+  String? _material;
+  int? _year;
 
-  final List<String> pieceTypes = ['King', 'Queen', 'Rook', 'Bishop', 'Knight', 'Pawn'];
+  final List<String> pieceTypes = [
+    'King',
+    'Queen',
+    'Rook',
+    'Bishop',
+    'Knight',
+    'Pawn',
+  ];
   final List<String> colors = ['White', 'Black'];
 
   @override
   void didChangeDependencies() {
-    final ChessPiece? existingPiece = ModalRoute.of(context)!.settings.arguments as ChessPiece?;
+    final ChessPiece? existingPiece =
+        ModalRoute.of(context)!.settings.arguments as ChessPiece?;
     if (existingPiece != null && _id == null) {
       _id = existingPiece.id;
       _name = existingPiece.name;
       _type = existingPiece.type;
       _color = existingPiece.color;
       _value = existingPiece.value;
+      _material = existingPiece.material;
+      _year = existingPiece.year;
     }
     super.didChangeDependencies();
   }
@@ -46,6 +58,8 @@ class _ChessEditScreenState extends State<ChessEditScreen> {
       type: _type!,
       color: _color!,
       value: _value ?? 0,
+      material: _material ?? 'Unknown' , // ค่าเริ่มต้นชั่วคราว
+      year: _year ?? 2023 , // ค่าเริ่มต้นชั่วคราว
     );
 
     final provider = Provider.of<ChessProvider>(context, listen: false);
@@ -86,7 +100,9 @@ class _ChessEditScreenState extends State<ChessEditScreen> {
               DropdownButtonFormField<String>(
                 value: _type,
                 decoration: const InputDecoration(labelText: 'ประเภทหมาก'),
-                items: pieceTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                items: pieceTypes
+                    .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                    .toList(),
                 onChanged: (value) => setState(() => _type = value),
                 validator: (value) => value == null ? 'เลือกประเภทหมาก' : null,
               ),
@@ -94,14 +110,30 @@ class _ChessEditScreenState extends State<ChessEditScreen> {
               DropdownButtonFormField<String>(
                 value: _color,
                 decoration: const InputDecoration(labelText: 'สีหมาก'),
-                items: colors.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                items: colors
+                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                    .toList(),
                 onChanged: (value) => setState(() => _color = value),
                 validator: (value) => value == null ? 'เลือกสีหมาก' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
+                initialValue: _material,
+                decoration: const InputDecoration(labelText: 'วัสดุของหมากรุก'),
+                validator: (value) => value!.isEmpty ? 'กรุณากรอกวัสดุ' : null,
+                onSaved: (value) => _material = value,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                initialValue: _year?.toString(),
+                decoration: const InputDecoration(labelText: 'ปีที่ผลิต'),
+                keyboardType: TextInputType.number,
+                onSaved: (value) => _year = int.tryParse(value ?? '0') ?? 0,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
                 initialValue: _value?.toString(),
-                decoration: const InputDecoration(labelText: 'มูลค่า (คะแนน)'),
+                decoration: const InputDecoration(labelText: 'มูลค่า (Dollars)'),
                 keyboardType: TextInputType.number,
                 onSaved: (value) => _value = double.tryParse(value ?? '0') ?? 0,
               ),
@@ -111,12 +143,17 @@ class _ChessEditScreenState extends State<ChessEditScreen> {
                 icon: const Icon(Icons.save, color: Colors.black),
                 label: const Text(
                   'บันทึก',
-                  style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFD4AF37),
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ],
